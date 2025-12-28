@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 
 async function berryMix() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { logger: false });
 
   app.useLogger(app.get(Logger));
 
