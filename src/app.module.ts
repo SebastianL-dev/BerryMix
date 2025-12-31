@@ -7,6 +7,7 @@ import {
   LogIdMiddleware,
 } from './logger/log-id/log-id.middleware';
 import { Request, Response } from 'express';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { Request, Response } from 'express';
       },
     }),
     ChatModule,
+    AuthModule,
   ],
 })
 export class AppModule implements NestModule {
