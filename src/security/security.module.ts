@@ -5,4 +5,4 @@ import { HashingService } from './hashing.service';
   providers: [HashingService],
   exports: [HashingService],
 })
-export class SecurityMoule {}
+export class SecurityModule {}

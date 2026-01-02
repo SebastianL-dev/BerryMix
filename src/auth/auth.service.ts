@@ -14,7 +14,6 @@ import { HashingService } from 'src/security/hashing.service';
 @Injectable()
 export class AuthService {
   private logger = new Logger(AuthService.name);
-  private readonly BCRYPT_ROUNDS = 13;
 
   constructor(
     private prisma: PrismaService,
