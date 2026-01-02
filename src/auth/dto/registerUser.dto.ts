@@ -20,7 +20,7 @@ export class RegisterUserDto {
 
   @IsNotEmpty()
   @MinLength(2)
-  password_hash: string;
+  password: string;
 
   @IsUrl()
   avatar_url: string | null;
