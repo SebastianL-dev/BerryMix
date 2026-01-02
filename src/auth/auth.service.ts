@@ -7,16 +7,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import bcrypt from 'bcrypt';
 import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
+import { HashingService } from 'src/security/hashing.service';
 
 @Injectable()
 export class AuthService {
   private logger = new Logger(AuthService.name);
   private readonly BCRYPT_ROUNDS = 13;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private hashingService: HashingService,
+  ) {}
 
   async register(registerUserDto: RegisterUserDto) {
     const { password, email } = registerUserDto;
@@ -33,8 +36,7 @@ export class AuthService {
           'This email is already in use, try other one',
         );
 
-      const salt = await bcrypt.genSalt(this.BCRYPT_ROUNDS);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const hashedPassword = await this.hashingService.hash(password);
 
       const newUser = await this.prisma.user.create({
         data: {
@@ -55,11 +57,9 @@ export class AuthService {
 
       return newUser;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
+      if (error instanceof HttpException) throw error;
 
-      this.logger.log(error);
+      this.logger.error(error);
       throw new InternalServerErrorException('Something went wrong');
     }
   }
@@ -74,13 +74,10 @@ export class AuthService {
         },
       });
 
-      if (!foundUser) throw new UnauthorizedException('Invalid credentials');
+      if (!foundUser || !foundUser.is_active)
+        throw new UnauthorizedException('Invalid credentials');
 
-      if (!foundUser.is_active) {
-        throw new UnauthorizedException('Account is disabled');
-      }
-
-      const isValidPassword = await bcrypt.compare(
+      const isValidPassword = await this.hashingService.compare(
         password,
         foundUser.password,
       );
@@ -105,11 +102,9 @@ export class AuthService {
 
       return updatedUser;
     } catch (error) {
-      if (error instanceof HttpException) {
-        throw error;
-      }
+      if (error instanceof HttpException) throw error;
 
-      this.logger.log(error);
+      this.logger.error(error);
       throw new InternalServerErrorException('Something went wrong');
     }
   }
