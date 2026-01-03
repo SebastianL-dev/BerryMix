@@ -6,7 +6,7 @@ import { TokenService } from './token.service';
 
 @Module({
   providers: [HashingService, TokenService],
-  exports: [HashingService, TokenService],
+  exports: [HashingService, TokenService, JwtModule],
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],
