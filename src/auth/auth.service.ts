@@ -10,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
 import { HashingService } from 'src/security/hashing.service';
+import { TokenService } from 'src/security/token.service';
 
 @Injectable()
 export class AuthService {
@@ -18,44 +19,41 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private hashingService: HashingService,
+    private tokenService: TokenService,
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
-    const { password, email } = registerUserDto;
+    const { password } = registerUserDto;
 
     try {
-      const foundUser = await this.prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
-
-      if (foundUser)
-        throw new ConflictException(
-          'This email is already in use, try other one',
-        );
-
       const hashedPassword = await this.hashingService.hash(password);
 
       const newUser = await this.prisma.user.create({
-        data: {
-          ...registerUserDto,
-          password: hashedPassword,
-        },
+        data: { ...registerUserDto, password: hashedPassword },
         select: {
           id: true,
           name: true,
           email: true,
           avatar_url: true,
           role: true,
+          is_verified: true,
           created_at: true,
         },
       });
 
+      const token = this.tokenService.signToken(
+        newUser.id,
+        newUser.role,
+        newUser.is_verified,
+      );
+
       this.logger.log('User registered sucessfully');
 
-      return newUser;
+      return { user: newUser, token };
     } catch (error) {
+      if ((error as { code: string }).code === 'P2002')
+        throw new ConflictException('This email is already in use');
+
       if (error instanceof HttpException) throw error;
 
       this.logger.error(error);
@@ -68,9 +66,7 @@ export class AuthService {
 
     try {
       const foundUser = await this.prisma.user.findUnique({
-        where: {
-          email,
-        },
+        where: { email },
       });
 
       if (!foundUser || !foundUser.is_active)
@@ -93,13 +89,20 @@ export class AuthService {
           email: true,
           avatar_url: true,
           role: true,
+          is_verified: true,
           last_login_at: true,
         },
       });
 
+      const token = this.tokenService.signToken(
+        updatedUser.id,
+        updatedUser.role,
+        updatedUser.is_verified,
+      );
+
       this.logger.log(`User logged in succesfully: ${email}`);
 
-      return updatedUser;
+      return { user: updatedUser, token };
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
