@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
 import type { Response } from 'express';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +18,7 @@ export class AuthController {
     });
   }
 
+  @Public()
   @Post('register')
   async register(
     @Body() registerUserDto: RegisterUserDto,
@@ -28,6 +30,7 @@ export class AuthController {
     return user;
   }
 
+  @Public()
   @Post('login')
   async login(
     @Body() loginUserDto: LoginUserDto,
