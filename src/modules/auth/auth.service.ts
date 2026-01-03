@@ -9,8 +9,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
-import { HashingService } from 'src/security/hashing.service';
-import { TokenService } from 'src/security/token.service';
+import { HashingService, TokenService } from 'src/common/security/index';
 
 @Injectable()
 export class AuthService {

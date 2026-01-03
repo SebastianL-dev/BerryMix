@@ -1,14 +1,14 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
-import { ChatModule } from './chat/chat.module';
 import {
   LOG_ID_HEADER,
   LogIdMiddleware,
-} from './logger/log-id/log-id.middleware';
+} from './common/middlewares/logger.middleware';
 import { Request, Response } from 'express';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
