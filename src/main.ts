@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import { ConfigService } from '@nestjs/config';
 
 async function berryMix() {
   const app = await NestFactory.create(AppModule, { logger: false });
@@ -18,7 +19,12 @@ async function berryMix() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>('env.port')!;
+
+  await app.listen(port);
+
+  console.log(`App running in port: ${port}`);
 }
 
 void berryMix();

@@ -3,13 +3,24 @@ import { Observable } from 'rxjs';
 import OpenAI from 'openai';
 import { systemPrompt } from './prompts/system.prompts';
 import { ChatCompletionMessageParam } from 'openai/resources';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ChatService {
-  private openai = new OpenAI({
-    baseURL: process.env.OPEN_AI_BASE_URL,
-    apiKey: process.env.OPEN_AI_API_KEY,
-  });
+  private readonly openaiEnv: { base_url: string; api_key: string };
+  private readonly openai: OpenAI;
+
+  constructor(private readonly configService: ConfigService) {
+    this.openaiEnv = {
+      base_url: this.configService.get<string>('env.openai.base_url')!,
+      api_key: this.configService.get<string>('env.openai.api_key')!,
+    };
+
+    this.openai = new OpenAI({
+      baseURL: this.openaiEnv.base_url,
+      apiKey: this.openaiEnv.api_key,
+    });
+  }
 
   private messages = new Map<string, ChatCompletionMessageParam[]>();
 

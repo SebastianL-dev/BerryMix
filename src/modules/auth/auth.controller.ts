@@ -4,15 +4,23 @@ import { RegisterUserDto } from './dto/registerUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
 import type { Response } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  private readonly nodeEnv: string;
+
+  constructor(
+    private authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
+    this.nodeEnv = this.configService.get<string>('env.node')!;
+  }
 
   private setCookie(response: Response, token: string) {
     response.cookie('berrymix_acc_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.nodeEnv === 'production',
       sameSite: 'strict',
       maxAge: 1000 * 60 * 60 * 3,
     });

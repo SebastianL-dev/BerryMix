@@ -1,0 +1,12 @@
+import { registerAs } from '@nestjs/config';
+
+export const appConfig = registerAs('env', () => ({
+  node: process.env.NODE_ENV,
+  port: process.env.PORT,
+  openai: {
+    base_url: process.env.OPENAI_BASE_URL,
+    api_key: process.env.OPENAI_API_KEY,
+  },
+  db_url: process.env.DATABASE_URL,
+  jwt_secret: process.env.JWT_SECRET_KEY,
+}));
