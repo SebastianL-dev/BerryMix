@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterUserDto } from './dto/registerUser.dto';
-import { LoginUserDto } from './dto/loginUser.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 import type { Response } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
 import { ConfigService } from '@nestjs/config';
@@ -22,7 +22,7 @@ export class AuthController {
       httpOnly: true,
       secure: this.nodeEnv === 'production',
       sameSite: 'strict',
-      maxAge: 1000 * 60 * 60 * 3,
+      maxAge: 1000 * 60 * 30,
     });
   }
 

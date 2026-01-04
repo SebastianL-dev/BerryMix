@@ -7,8 +7,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { RegisterUserDto } from './dto/registerUser.dto';
-import { LoginUserDto } from './dto/loginUser.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 import { HashingService, TokenService } from 'src/common/security/index';
 
 @Injectable()

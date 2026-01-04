@@ -16,7 +16,7 @@ export class PrismaService
 {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(readonly configService: ConfigService) {
     const connectionString = configService.get<string>('env.db_url')!;
 
     const pool = new Pool({ connectionString });
