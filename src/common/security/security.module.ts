@@ -3,11 +3,12 @@ import { HashingService } from './hashing.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from './token.service';
+import { CookieService } from './cookie.service';
 
 @Global()
 @Module({
-  providers: [HashingService, TokenService],
-  exports: [HashingService, TokenService, JwtModule],
+  providers: [HashingService, TokenService, CookieService],
+  exports: [HashingService, TokenService, JwtModule, CookieService],
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],

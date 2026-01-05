@@ -4,12 +4,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import argon2 from 'argon2';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class HashingService {
   private readonly logger = new Logger(HashingService.name);
 
-  async hash(data: string): Promise<string> {
+  async hashPassword(data: string): Promise<string> {
     try {
       return await argon2.hash(data, {
         type: argon2.argon2id,
@@ -23,7 +24,7 @@ export class HashingService {
     }
   }
 
-  async compare(data: string, hash: string): Promise<boolean> {
+  async comparePassword(data: string, hash: string): Promise<boolean> {
     try {
       return await argon2.verify(hash, data);
     } catch (error) {
@@ -31,5 +32,9 @@ export class HashingService {
 
       return false;
     }
+  }
+
+  hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 }
