@@ -119,4 +119,8 @@ export class AuthController {
 
     return { message: 'Token refreshed successfully' };
   }
+
+  // TODO: Create google auth endpoints, redirect to google auth.
+  // TODO: Create google auth guard and strategy.
+  // TODO: Also add GitHub auth.
 }
