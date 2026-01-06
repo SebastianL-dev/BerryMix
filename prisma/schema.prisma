@@ -10,7 +10,7 @@ datasource db {
 model User {
   id String @id @default(uuid()) @db.Uuid
   email String  @unique
-  password String
+  password String?
   name String?
   avatar_url String?
   role String @default("user")
@@ -21,7 +21,7 @@ model User {
   last_login_at DateTime? @db.Timestamptz 
 
   // Relations
-  accounts            Account[]
+  auth_providers            AuthProvider[]
   refresh_tokens      RefreshToken[]
   email_verifications EmailVerification[]
   
@@ -44,17 +44,18 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model Account {
+model AuthProvider {
   id String @id @default(uuid()) @db.Uuid
   user_id String @db.Uuid
-  provider String 
+  provider String @default("local")
   provider_account_id String @unique
   created_at DateTime? @default(now()) @db.Timestamptz
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@unique([provider, provider_account_id])
   @@index([id, user_id])
-  @@map("accounts")
+  @@map("auth_providers")
 }
 
 model EmailVerification {
