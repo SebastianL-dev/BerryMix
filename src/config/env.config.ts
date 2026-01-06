@@ -9,4 +9,6 @@ export const appConfig = registerAs('env', () => ({
   },
   db_url: process.env.DATABASE_URL,
   jwt_secret: process.env.JWT_SECRET_KEY,
+  google_id: process.env.GOOGLE_CLIENT_ID,
+  google_secret: process.env.GOOGLE_CLIENT_SECRET,
 }));

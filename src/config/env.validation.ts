@@ -40,6 +40,13 @@ export class EnvironmentVariables {
   // JWT secret environment variable
   @IsString()
   JWT_SECRET_KEY: string;
+
+  // Google oauth provider
+  @IsString()
+  GOOGLE_CLIENT_ID: string;
+
+  @IsString()
+  GOOGLE_CLIENT_SECRET: string;
 }
 
 export function validate(config: Record<string, unknown>) {
