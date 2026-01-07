@@ -47,6 +47,9 @@ export class EnvironmentVariables {
 
   @IsString()
   GOOGLE_CLIENT_SECRET: string;
+
+  @IsString()
+  GOOGLE_CALLBACK_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {

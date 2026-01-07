@@ -11,4 +11,5 @@ export const appConfig = registerAs('env', () => ({
   jwt_secret: process.env.JWT_SECRET_KEY,
   google_id: process.env.GOOGLE_CLIENT_ID,
   google_secret: process.env.GOOGLE_CLIENT_SECRET,
+  google_callback: process.env.GOOGLE_CALLBACK_URL,
 }));
