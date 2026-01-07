@@ -9,10 +9,14 @@ export const appConfig = registerAs('env', () => ({
   },
   db_url: process.env.DATABASE_URL,
   jwt_secret: process.env.JWT_SECRET_KEY,
-  google_id: process.env.GOOGLE_CLIENT_ID,
-  google_secret: process.env.GOOGLE_CLIENT_SECRET,
-  google_callback: process.env.GOOGLE_CALLBACK_URL,
-  github_id: process.env.GITHUB_CLIENT_ID,
-  github_secret: process.env.GITHUB_CLIENT_SECRET,
-  github_callback: process.env.GITHUB_CALLBACK_URL,
+  google: {
+    id: process.env.GOOGLE_CLIENT_ID,
+    secret: process.env.GOOGLE_CLIENT_SECRET,
+    callback: process.env.GOOGLE_CALLBACK_URL,
+  },
+  github: {
+    id: process.env.GITHUB_CLIENT_ID,
+    secret: process.env.GITHUB_CLIENT_SECRET,
+    callback: process.env.GITHUB_CALLBACK_URL,
+  },
 }));

@@ -8,9 +8,9 @@ import { Profile } from 'passport-google-oauth20';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(readonly configService: ConfigService) {
     super({
-      clientID: configService.get<string>('env.google_id')!,
-      clientSecret: configService.get<string>('env.google_secret')!,
-      callbackURL: configService.get<string>('env.google_callback')!,
+      clientID: configService.get<string>('env.google.id')!,
+      clientSecret: configService.get<string>('env.google.secret')!,
+      callbackURL: configService.get<string>('env.google.callback')!,
       scope: ['email', 'name', 'profile'],
     });
   }
