@@ -11,7 +11,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { HashingService, TokenService } from 'src/common/security/index';
 import { Prisma, RefreshToken } from '@prisma/client';
-import GoogleUser from './interfaces/google-user.interface';
+import AuthUser from './interfaces/auth-user.interface';
 
 @Injectable()
 export class AuthService {
@@ -233,9 +233,9 @@ export class AuthService {
     }
   }
 
-  async googleLogin(googleUser: GoogleUser) {
+  async oauthLogin(authUser: AuthUser) {
     try {
-      const user = await this.resolveGoogleUser(googleUser);
+      const user = await this.resolveAuthUser(authUser);
 
       const accessToken = this.tokenService.signAccessToken(user.id);
       const refreshToken = this.tokenService.refreshToken();
@@ -259,25 +259,28 @@ export class AuthService {
     }
   }
 
-  private async resolveGoogleUser(googleUser: GoogleUser) {
+  private async resolveAuthUser(authUser: AuthUser) {
     try {
       const provider = await this.prisma.authProvider.findUnique({
-        where: { provider_account_id: googleUser.googleId },
+        where: {
+          provider: authUser.provider,
+          provider_account_id: authUser.providerId,
+        },
         include: { user: true },
       });
 
       if (provider) return provider.user;
 
       const userByEmail = await this.prisma.user.findUnique({
-        where: { email: googleUser.email },
+        where: { email: authUser.email },
       });
 
       if (userByEmail) {
         await this.prisma.authProvider.create({
           data: {
             user_id: userByEmail.id,
-            provider: 'google',
-            provider_account_id: googleUser.googleId,
+            provider: authUser.provider,
+            provider_account_id: authUser.providerId,
           },
         });
 
@@ -287,9 +290,9 @@ export class AuthService {
       const { user } = await this.prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
           data: {
-            name: `${googleUser.firstName} ${googleUser.lastName}`,
-            email: googleUser.email,
-            avatar_url: googleUser.picture,
+            name: `${authUser.firstName} ${authUser.lastName}`,
+            email: authUser.email,
+            avatar_url: authUser.picture,
             is_verified: true,
           },
         });
@@ -297,8 +300,8 @@ export class AuthService {
         await tx.authProvider.create({
           data: {
             user_id: newUser.id,
-            provider: 'google',
-            provider_account_id: googleUser.googleId,
+            provider: authUser.provider,
+            provider_account_id: authUser.providerId,
           },
         });
 

@@ -15,7 +15,8 @@ import type { Response, Request } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
 import { CookieService } from 'src/common/security';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
-import GoogleUser from './interfaces/google-user.interface';
+import { GitHubAuthGuard } from './guards/github-auth.guard';
+import AuthUser from './interfaces/auth-user.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -133,10 +134,10 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleAuthRedirect(
-    @Req() request: { user: GoogleUser },
+    @Req() request: Request & { user: AuthUser },
     @Res() response: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.googleLogin(
+    const { accessToken, refreshToken } = await this.authService.oauthLogin(
       request.user,
     );
 
@@ -154,10 +155,41 @@ export class AuthController {
       '/auth/refresh',
     );
 
-    // FIXME: Add redirect url
     // TODO: Add production and development urls to environment variables
     return response.redirect('http://localhost:3000');
   }
 
-  // TODO: Also add GitHub auth.
+  @Public()
+  @Get('github')
+  @UseGuards(GitHubAuthGuard)
+  async githubAuth() {}
+
+  @Public()
+  @Get('github/callback')
+  @UseGuards(GitHubAuthGuard)
+  async githubAuthRedirect(
+    @Req() request: Request & { user: AuthUser },
+    @Res() response: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.oauthLogin(
+      request.user,
+    );
+
+    this.cookieService.set(
+      response,
+      'berrymix_acc_token',
+      accessToken,
+      1000 * 60 * 30,
+    );
+    this.cookieService.set(
+      response,
+      'berrymix_ref_token',
+      refreshToken,
+      1000 * 60 * 60 * 24 * 7,
+      '/auth/refresh',
+    );
+
+    // TODO: Add production and development urls to environment variables
+    return response.redirect('http://localhost:3000');
+  }
 }
