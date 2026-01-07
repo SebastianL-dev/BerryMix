@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   Res,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -12,6 +14,8 @@ import { LoginUserDto } from './dto/login-user.dto';
 import type { Response, Request } from 'express';
 import { Public } from 'src/common/decorators/public.decorator';
 import { CookieService } from 'src/common/security';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import GoogleUser from './interfaces/google-user.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -120,7 +124,40 @@ export class AuthController {
     return { message: 'Token refreshed successfully' };
   }
 
-  // TODO: Create google auth endpoints, redirect to google auth.
-  // TODO: Create google auth guard and strategy.
+  @Public()
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth() {}
+
+  @Public()
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuthRedirect(
+    @Req() request: { user: GoogleUser },
+    @Res() response: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.googleLogin(
+      request.user,
+    );
+
+    this.cookieService.set(
+      response,
+      'berrymix_acc_token',
+      accessToken,
+      1000 * 60 * 30,
+    );
+    this.cookieService.set(
+      response,
+      'berrymix_ref_token',
+      refreshToken,
+      1000 * 60 * 60 * 24 * 7,
+      '/auth/refresh',
+    );
+
+    // FIXME: Add redirect url
+    // TODO: Add production and development urls to environment variables
+    return response.redirect('http://localhost:3000');
+  }
+
   // TODO: Also add GitHub auth.
 }

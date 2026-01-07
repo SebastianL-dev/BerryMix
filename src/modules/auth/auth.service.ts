@@ -11,6 +11,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { HashingService, TokenService } from 'src/common/security/index';
 import { Prisma, RefreshToken } from '@prisma/client';
+import GoogleUser from './interfaces/google-user.interface';
 
 @Injectable()
 export class AuthService {
@@ -28,27 +29,39 @@ export class AuthService {
     try {
       const hashedPassword = await this.hashingService.hashPassword(password);
 
-      const newUser = await this.prisma.user.create({
-        data: { ...registerUserDto, password: hashedPassword },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatar_url: true,
-          role: true,
-          is_verified: true,
-          last_login_at: true,
-        },
+      const result = await this.prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: { ...registerUserDto, password: hashedPassword },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar_url: true,
+            role: true,
+            is_verified: true,
+            last_login_at: true,
+          },
+        });
+
+        await tx.authProvider.create({
+          data: {
+            user_id: newUser.id,
+            provider: 'local',
+            provider_account_id: `local_${newUser.id}`,
+          },
+        });
+
+        return { newUser };
       });
 
-      const accessToken = this.tokenService.signAccessToken(newUser.id);
+      const accessToken = this.tokenService.signAccessToken(result.newUser.id);
 
       const refreshToken = this.tokenService.refreshToken();
       const hashedRefreshToken = this.hashingService.hashToken(refreshToken);
 
       await this.prisma.refreshToken.create({
         data: {
-          user_id: newUser.id,
+          user_id: result.newUser.id,
           token_hash: hashedRefreshToken,
           expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         },
@@ -56,7 +69,7 @@ export class AuthService {
 
       this.logger.log('User registered sucessfully');
 
-      return { user: newUser, accessToken, refreshToken };
+      return { user: result.newUser, accessToken, refreshToken };
     } catch (error) {
       if ((error as { code: string }).code === 'P2002')
         throw new ConflictException('This email is already in use');
@@ -78,6 +91,16 @@ export class AuthService {
 
       if (!foundUser || !foundUser.is_active)
         throw new UnauthorizedException('Invalid credentials');
+
+      const localProvider = await this.prisma.authProvider.findUnique({
+        where: {
+          provider: 'local',
+          provider_account_id: `local_${foundUser.id}`,
+        },
+      });
+
+      if (!localProvider || !foundUser.password)
+        throw new UnauthorizedException('Login with google or github');
 
       const isValidPassword = await this.hashingService.comparePassword(
         password,
@@ -202,6 +225,87 @@ export class AuthService {
           revoked_date: new Date(),
         },
       });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      this.logger.error(error);
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  async googleLogin(googleUser: GoogleUser) {
+    try {
+      const user = await this.resolveGoogleUser(googleUser);
+
+      const accessToken = this.tokenService.signAccessToken(user.id);
+      const refreshToken = this.tokenService.refreshToken();
+
+      const hashedRefreshToken = this.hashingService.hashToken(refreshToken);
+
+      await this.prisma.refreshToken.create({
+        data: {
+          user_id: user.id,
+          token_hash: hashedRefreshToken,
+          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+        },
+      });
+
+      return { accessToken, refreshToken };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      this.logger.error(error);
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  private async resolveGoogleUser(googleUser: GoogleUser) {
+    try {
+      const provider = await this.prisma.authProvider.findUnique({
+        where: { provider_account_id: googleUser.googleId },
+        include: { user: true },
+      });
+
+      if (provider) return provider.user;
+
+      const userByEmail = await this.prisma.user.findUnique({
+        where: { email: googleUser.email },
+      });
+
+      if (userByEmail) {
+        await this.prisma.authProvider.create({
+          data: {
+            user_id: userByEmail.id,
+            provider: 'google',
+            provider_account_id: googleUser.googleId,
+          },
+        });
+
+        return userByEmail;
+      }
+
+      const { user } = await this.prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: {
+            name: `${googleUser.firstName} ${googleUser.lastName}`,
+            email: googleUser.email,
+            avatar_url: googleUser.picture,
+            is_verified: true,
+          },
+        });
+
+        await tx.authProvider.create({
+          data: {
+            user_id: newUser.id,
+            provider: 'google',
+            provider_account_id: googleUser.googleId,
+          },
+        });
+
+        return { user: newUser };
+      });
+
+      return user;
     } catch (error) {
       if (error instanceof HttpException) throw error;
 
