@@ -12,4 +12,7 @@ export const appConfig = registerAs('env', () => ({
   google_id: process.env.GOOGLE_CLIENT_ID,
   google_secret: process.env.GOOGLE_CLIENT_SECRET,
   google_callback: process.env.GOOGLE_CALLBACK_URL,
+  github_id: process.env.GITHUB_CLIENT_ID,
+  github_secret: process.env.GITHUB_CLIENT_SECRET,
+  github_callback: process.env.GITHUB_CALLBACK_URL,
 }));
