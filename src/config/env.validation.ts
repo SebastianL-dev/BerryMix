@@ -20,14 +20,13 @@ export class EnvironmentVariables {
   NODE_ENV: NodeEnvironment;
 
   // Port environment varable
-  @IsNumber()
+  @IsNumber({}, { message: 'PORT must be a number' })
   @Min(3000)
   @Max(9999)
   PORT: number;
 
   // Open AI environment variables
   @IsUrl()
-  @IsString()
   OPENAI_BASE_URL: string;
 
   @IsString()
@@ -48,19 +47,39 @@ export class EnvironmentVariables {
   @IsString()
   GOOGLE_CLIENT_SECRET: string;
 
-  @IsString()
+  @IsUrl({ require_tld: false })
   GOOGLE_CALLBACK_URL: string;
+
+  // GitHub oauth provider
+  @IsString()
+  GITHUB_CLIENT_ID: string;
+
+  @IsString()
+  GITHUB_CLIENT_SECRET: string;
+
+  @IsUrl({ require_tld: false })
+  GITHUB_CALLBACK_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {
-  const validateConfig = plainToInstance(EnvironmentVariables, config, {
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });
 
-  const errors = validateSync(validateConfig, { skipMissingProperties: false });
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
 
-  if (errors.length > 0)
-    throw new Error(`Config validation error: ${errors.toString()}`);
+  if (errors.length > 0) {
+    console.error('❌ Invalid environment variables');
+    console.error(
+      errors.map((e) => ({
+        property: e.property,
+        constraints: e.constraints,
+      })),
+    );
+    process.exit(1);
+  }
 
-  return validateConfig;
+  return validatedConfig;
 }
