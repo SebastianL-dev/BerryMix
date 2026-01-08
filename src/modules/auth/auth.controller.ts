@@ -18,7 +18,10 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
 import AuthUser from './interfaces/auth-user.interface';
 
-@Controller('auth')
+@Controller({
+  path: 'auth',
+  version: '1.0.0',
+})
 export class AuthController {
   constructor(
     private authService: AuthService,

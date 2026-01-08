@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 
@@ -10,6 +10,13 @@ async function berryMix() {
 
   app.use(cookieParser());
   app.useLogger(app.get(Logger));
+
+  app.setGlobalPrefix('api/v1');
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
+
   app.enableCors({
     origin: 'http://localhost:3000', // TODO: Add development and production url
     credentials: true,
