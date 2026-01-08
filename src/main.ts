@@ -10,7 +10,10 @@ async function berryMix() {
 
   app.use(cookieParser());
   app.useLogger(app.get(Logger));
-  app.enableCors('*');
+  app.enableCors({
+    origin: 'http://localhost:3000', // TODO: Add development and production url
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

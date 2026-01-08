@@ -31,7 +31,11 @@ export class AuthService {
 
       const result = await this.prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
-          data: { ...registerUserDto, password: hashedPassword },
+          data: {
+            ...registerUserDto,
+            password: hashedPassword,
+            last_login_at: new Date(),
+          },
           select: {
             id: true,
             name: true,
@@ -248,6 +252,11 @@ export class AuthService {
           token_hash: hashedRefreshToken,
           expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         },
+      });
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { last_login_at: new Date() },
       });
 
       return { accessToken, refreshToken };

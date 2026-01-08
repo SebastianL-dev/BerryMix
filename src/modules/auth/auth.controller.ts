@@ -156,7 +156,7 @@ export class AuthController {
     );
 
     // TODO: Add production and development urls to environment variables
-    return response.redirect('http://localhost:3000');
+    return response.redirect('http://localhost:3000/profile');
   }
 
   @Public()
@@ -190,6 +190,6 @@ export class AuthController {
     );
 
     // TODO: Add production and development urls to environment variables
-    return response.redirect('http://localhost:3000');
+    return response.redirect('http://localhost:3000/profile');
   }
 }

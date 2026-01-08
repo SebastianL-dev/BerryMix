@@ -1,10 +1,17 @@
 {
   "name": "berrymix-backend",
-  "version": "0.0.1",
-  "description": "",
+  "version": "1.0.0",
+  "description": "BerryMix is an web aplications that uses free AI models to assist coders/programmers.",
   "author": "Sebastián Fernando Lozano Bello",
   "private": true,
   "license": "MIT",
+  "keywords": [
+    "ai",
+    "berry",
+    "berrymix",
+    "programmers",
+    "code"
+  ],
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

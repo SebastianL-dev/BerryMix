@@ -20,6 +20,7 @@ export class UsersService {
           id,
         },
         select: {
+          id: true,
           name: true,
           email: true,
           avatar_url: true,
