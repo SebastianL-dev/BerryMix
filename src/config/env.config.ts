@@ -19,4 +19,8 @@ export const appConfig = registerAs('env', () => ({
     secret: process.env.GITHUB_CLIENT_SECRET,
     callback: process.env.GITHUB_CALLBACK_URL,
   },
+  front: {
+    dev: process.env.DEV_FRONTEND_URL,
+    prod: process.env.PROD_FRONTEND_URL,
+  },
 }));

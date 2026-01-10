@@ -7,6 +7,13 @@ import { ConfigService } from '@nestjs/config';
 
 async function berryMix() {
   const app = await NestFactory.create(AppModule, { logger: false });
+  const configService = app.get(ConfigService);
+
+  const port = configService.get<number>('env.port')!;
+  const corsOrigin =
+    configService.get<string>('env.node') === 'development'
+      ? configService.get<string>('env.front.dev')
+      : configService.get<string>('env.front.prod');
 
   app.use(cookieParser());
   app.useLogger(app.get(Logger));
@@ -18,7 +25,7 @@ async function berryMix() {
   });
 
   app.enableCors({
-    origin: 'http://localhost:3000', // TODO: Add development and production url
+    origin: corsOrigin,
     credentials: true,
   });
 
@@ -28,9 +35,6 @@ async function berryMix() {
       forbidNonWhitelisted: true,
     }),
   );
-
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('env.port')!;
 
   await app.listen(port);
 

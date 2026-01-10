@@ -59,6 +59,12 @@ export class EnvironmentVariables {
 
   @IsUrl({ require_tld: false })
   GITHUB_CALLBACK_URL: string;
+
+  @IsUrl({ require_tld: false })
+  DEV_FRONTEND_URL: string;
+
+  @IsUrl()
+  PROD_FRONTEND_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {

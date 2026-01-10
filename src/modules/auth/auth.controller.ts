@@ -17,13 +17,22 @@ import { CookieService } from 'src/common/security';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
 import AuthUser from './interfaces/auth-user.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
+  private frontUrl: string;
+
   constructor(
     private authService: AuthService,
     private cookieService: CookieService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.frontUrl =
+      this.configService.get<string>('env.node') === 'development'
+        ? this.configService.get<string>('env.front.dev')!
+        : this.configService.get<string>('env.front.prod')!;
+  }
 
   @Public()
   @Post('register')
@@ -155,8 +164,7 @@ export class AuthController {
       '/auth/refresh',
     );
 
-    // TODO: Add production and development urls to environment variables
-    return response.redirect('http://localhost:3000/profile');
+    return response.redirect(`${this.frontUrl}/profile`);
   }
 
   @Public()
@@ -189,7 +197,6 @@ export class AuthController {
       '/auth/refresh',
     );
 
-    // TODO: Add production and development urls to environment variables
-    return response.redirect('http://localhost:3000/profile');
+    return response.redirect(`${this.frontUrl}/profile`);
   }
 }

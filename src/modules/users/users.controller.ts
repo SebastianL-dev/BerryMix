@@ -1,7 +1,7 @@
 import { Controller, Get, Req, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 
-@Controller('user')
+@Controller({ path: 'user', version: '1' })
 export class UsersController {
   constructor(private userService: UsersService) {}
 
