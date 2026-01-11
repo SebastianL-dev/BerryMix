@@ -19,7 +19,7 @@ import { GitHubAuthGuard } from './guards/github-auth.guard';
 import AuthUser from './interfaces/auth-user.interface';
 import { ConfigService } from '@nestjs/config';
 
-@Controller('auth')
+@Controller({ path: 'auth', version: '1' })
 export class AuthController {
   private frontUrl: string;
 

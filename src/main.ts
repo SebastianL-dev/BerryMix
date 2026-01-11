@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
 
@@ -16,7 +16,8 @@ async function berryMix() {
       : configService.get<string>('env.front.prod');
 
   app.setGlobalPrefix('api/v1');
-  // TODO: fix nestjs versioning
+
+  app.enableVersioning({ type: VersioningType.URI });
 
   app.use(cookieParser());
   app.useLogger(app.get(Logger));
