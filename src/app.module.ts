@@ -20,6 +20,6 @@ import { loggerConfig } from './config/logger.config';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LogIdMiddleware).forRoutes('*');
+    consumer.apply(LogIdMiddleware).forRoutes('*path');
   }
 }
