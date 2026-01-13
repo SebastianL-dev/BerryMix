@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -12,7 +13,10 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { HashingService, TokenService } from 'src/common/security/index';
 import { Prisma, RefreshToken } from '@prisma/client';
 import AuthUser from './interfaces/auth-user.interface';
+import { EmailService } from 'src/common/email/email.service';
 
+// TODO: Improve error messages -> return to client.
+// TODO: Add send other verification email function.
 @Injectable()
 export class AuthService {
   private logger = new Logger(AuthService.name);
@@ -21,6 +25,7 @@ export class AuthService {
     private prisma: PrismaService,
     private hashingService: HashingService,
     private tokenService: TokenService,
+    private emailService: EmailService,
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
@@ -34,7 +39,7 @@ export class AuthService {
           data: {
             ...registerUserDto,
             password: hashedPassword,
-            last_login_at: new Date(),
+            is_verified: false,
           },
           select: {
             id: true,
@@ -58,22 +63,27 @@ export class AuthService {
         return { newUser };
       });
 
-      const accessToken = this.tokenService.signAccessToken(result.newUser.id);
+      const verificationToken = this.tokenService.randomToken();
+      const tokenHash = this.hashingService.hashToken(verificationToken);
 
-      const refreshToken = this.tokenService.refreshToken();
-      const hashedRefreshToken = this.hashingService.hashToken(refreshToken);
-
-      await this.prisma.refreshToken.create({
+      await this.prisma.emailVerification.create({
         data: {
           user_id: result.newUser.id,
-          token_hash: hashedRefreshToken,
-          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+          token_hash: tokenHash,
+          expires_at: new Date(Date.now() + 1000 * 60 * 60),
         },
       });
 
-      this.logger.log('User registered sucessfully');
+      const emailVerification = await this.emailService.sendVerificationEmail(
+        result.newUser.email,
+        result.newUser.name!,
+        verificationToken,
+      );
 
-      return { user: result.newUser, accessToken, refreshToken };
+      if (!emailVerification)
+        throw new ForbiddenException('Error sending verification email');
+
+      return { message: 'User verified successfully' };
     } catch (error) {
       if ((error as { code: string }).code === 'P2002')
         throw new ConflictException('This email is already in use');
@@ -95,6 +105,10 @@ export class AuthService {
 
       if (!foundUser || !foundUser.is_active)
         throw new UnauthorizedException('Invalid credentials');
+
+      if (!foundUser.is_verified) {
+        throw new ForbiddenException('User not verified');
+      }
 
       const localProvider = await this.prisma.authProvider.findUnique({
         where: {
@@ -130,7 +144,7 @@ export class AuthService {
 
       const accessToken = this.tokenService.signAccessToken(updatedUser.id);
 
-      const refreshToken = this.tokenService.refreshToken();
+      const refreshToken = this.tokenService.randomToken();
       const hashedRefreshToken = this.hashingService.hashToken(refreshToken);
 
       await this.prisma.refreshToken.create({
@@ -198,7 +212,7 @@ export class AuthService {
         throw new UnauthorizedException('Token reuse detected');
       }
 
-      const newRefreshToken = this.tokenService.refreshToken();
+      const newRefreshToken = this.tokenService.randomToken();
       const newHash = this.hashingService.hashToken(newRefreshToken);
 
       await tx.refreshToken.create({
@@ -242,7 +256,7 @@ export class AuthService {
       const user = await this.resolveAuthUser(authUser);
 
       const accessToken = this.tokenService.signAccessToken(user.id);
-      const refreshToken = this.tokenService.refreshToken();
+      const refreshToken = this.tokenService.randomToken();
 
       const hashedRefreshToken = this.hashingService.hashToken(refreshToken);
 
@@ -260,6 +274,55 @@ export class AuthService {
       });
 
       return { accessToken, refreshToken };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+
+      this.logger.error(error);
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  async verifyEmail(token: string) {
+    try {
+      const tokenHash = this.hashingService.hashToken(token);
+
+      const emailVerificationToken =
+        await this.prisma.emailVerification.findUnique({
+          where: { token_hash: tokenHash },
+          include: { user: true },
+        });
+
+      if (!emailVerificationToken)
+        throw new UnauthorizedException('Invalid credentials');
+
+      if (emailVerificationToken.expires_at < new Date()) {
+        await this.prisma.emailVerification.delete({
+          where: { id: emailVerificationToken.id },
+        });
+
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if (emailVerificationToken.user.is_verified) {
+        await this.prisma.emailVerification.delete({
+          where: { id: emailVerificationToken.id },
+        });
+
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      await this.prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: emailVerificationToken.user_id },
+          data: { is_verified: true },
+        });
+
+        await tx.emailVerification.delete({
+          where: { id: emailVerificationToken.id },
+        });
+      });
+
+      return { message: 'Email verified successfully' };
     } catch (error) {
       if (error instanceof HttpException) throw error;
 

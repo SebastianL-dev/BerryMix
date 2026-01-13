@@ -8,6 +8,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { GitHubStrategy } from './strategies/github.strategy';
+import { EmailModule } from 'src/common/email/email.module';
 
 @Module({
   controllers: [AuthController],
@@ -18,7 +19,7 @@ import { GitHubStrategy } from './strategies/github.strategy';
     GitHubStrategy,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
-  imports: [PrismaModule, SecurityModule],
+  imports: [PrismaModule, SecurityModule, EmailModule],
   exports: [AuthService],
 })
 export class AuthModule {}

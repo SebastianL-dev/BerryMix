@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -19,6 +20,8 @@ import { GitHubAuthGuard } from './guards/github-auth.guard';
 import AuthUser from './interfaces/auth-user.interface';
 import { ConfigService } from '@nestjs/config';
 
+// FIXME: Simplify code.
+// TODO: Improve server responses (Error or success messages).
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
   private frontUrl: string;
@@ -40,23 +43,9 @@ export class AuthController {
     @Body() registerUserDto: RegisterUserDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { user, accessToken, refreshToken } =
-      await this.authService.register(registerUserDto);
+    await this.authService.register(registerUserDto);
 
-    this.cookieService.set(
-      response,
-      'berrymix_acc_token',
-      accessToken,
-      1000 * 60 * 30,
-    );
-    this.cookieService.set(
-      response,
-      'berrymix_ref_token',
-      refreshToken,
-      1000 * 60 * 60 * 24 * 7,
-      '/auth/refresh',
-    );
-    return user;
+    return response.redirect(`${this.frontUrl}/verification`);
   }
 
   @Public()
@@ -198,5 +187,11 @@ export class AuthController {
     );
 
     return response.redirect(`${this.frontUrl}/profile`);
+  }
+
+  @Public()
+  @Get('verify')
+  async verifyEmail(@Query('token') token: string) {
+    return await this.authService.verifyEmail(token);
   }
 }
