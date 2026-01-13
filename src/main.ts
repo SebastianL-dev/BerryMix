@@ -15,7 +15,7 @@ async function berryMix() {
       ? configService.get<string>('env.front.dev')
       : configService.get<string>('env.front.prod');
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
 
   app.enableVersioning({ type: VersioningType.URI });
 
