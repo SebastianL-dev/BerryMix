@@ -19,6 +19,7 @@ export class EmailService {
   ) {
     const verificationLink = `${this.configService.get<string>('env.front.dev')}/verify-email?token=${verificationToken}`;
 
+    // TODO: Improve email message.
     return await this.resend.emails.send({
       from: 'BerryMix <berrymix@resend.dev>',
       to: [email],

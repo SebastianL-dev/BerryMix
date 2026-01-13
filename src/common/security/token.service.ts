@@ -14,7 +14,7 @@ export class TokenService {
     return this.jwtService.sign(payload, { expiresIn: '30min' });
   }
 
-  refreshToken(): string {
+  randomToken(): string {
     return randomBytes(64).toString('hex');
   }
 }
