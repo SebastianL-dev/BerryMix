@@ -23,4 +23,5 @@ export const appConfig = registerAs('env', () => ({
     dev: process.env.DEV_FRONTEND_URL,
     prod: process.env.PROD_FRONTEND_URL,
   },
+  resend_api_key: process.env.RESEND_API_KEY,
 }));

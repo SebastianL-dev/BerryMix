@@ -65,6 +65,9 @@ export class EnvironmentVariables {
 
   @IsUrl()
   PROD_FRONTEND_URL: string;
+
+  @IsString()
+  RESEND_API_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {
