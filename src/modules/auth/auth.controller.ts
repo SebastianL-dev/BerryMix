@@ -17,7 +17,7 @@ import { Public } from 'src/common/decorators/public.decorator';
 import { CookieService } from 'src/common/security';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
-import AuthUser from './interfaces/auth-user.interface';
+import AuthUser from './interfaces/oauth-user.interface';
 import { ConfigService } from '@nestjs/config';
 
 // FIXME: Simplify code.
@@ -82,7 +82,7 @@ export class AuthController {
     const userId = request.user.user_id;
 
     if (userId) {
-      await this.authService.revokeAllUserTokens(userId);
+      await this.authService.logoutAll(userId);
     }
 
     this.cookieService.clear(response, 'berrymix_acc_token');
@@ -104,7 +104,7 @@ export class AuthController {
     if (!refreshToken) throw new UnauthorizedException('Invalid credentials');
 
     const { newAccessToken, newRefreshToken } =
-      await this.authService.refreshTokens(refreshToken);
+      await this.authService.refreshToken(refreshToken);
 
     this.cookieService.set(
       response,

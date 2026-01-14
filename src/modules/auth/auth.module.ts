@@ -9,6 +9,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { GitHubStrategy } from './strategies/github.strategy';
 import { EmailModule } from 'src/common/email/email.module';
+import { RegisterService } from './services/register.service';
+import { LoginService } from './services/login.service';
+import { EmailVerificationService } from './services/email-verification.service';
+import { RefreshTokenService } from './services/refresh-token.service';
+import { LogoutAllService } from './services/logout-all.service';
+import { OauthLoginService } from './services/oauth-login.service';
+import { ResolveAuthUserService } from './services/resolve-oauth-user.service';
 
 @Module({
   controllers: [AuthController],
@@ -17,6 +24,13 @@ import { EmailModule } from 'src/common/email/email.module';
     JwtStrategy,
     GoogleStrategy,
     GitHubStrategy,
+    RegisterService,
+    LoginService,
+    EmailVerificationService,
+    RefreshTokenService,
+    LogoutAllService,
+    OauthLoginService,
+    ResolveAuthUserService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
   imports: [PrismaModule, SecurityModule, EmailModule],
