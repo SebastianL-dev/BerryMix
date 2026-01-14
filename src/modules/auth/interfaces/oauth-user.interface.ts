@@ -1,4 +1,4 @@
-export default interface AuthUser {
+export default interface OAuthUser {
   provider: 'google' | 'github';
   providerId: string;
   email: string;
