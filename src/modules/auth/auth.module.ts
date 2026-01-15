@@ -16,6 +16,8 @@ import { RefreshTokenService } from './services/refresh-token.service';
 import { LogoutAllService } from './services/logout-all.service';
 import { OauthLoginService } from './services/oauth-login.service';
 import { ResolveAuthUserService } from './services/resolve-oauth-user.service';
+import { ForgotPasswordService } from './services/forgot-password.service';
+import { ResetPasswordService } from './services/reset-password.service';
 
 @Module({
   controllers: [AuthController],
@@ -31,6 +33,8 @@ import { ResolveAuthUserService } from './services/resolve-oauth-user.service';
     LogoutAllService,
     OauthLoginService,
     ResolveAuthUserService,
+    ForgotPasswordService,
+    ResetPasswordService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
   imports: [PrismaModule, SecurityModule, EmailModule],

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -18,6 +19,8 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GitHubAuthGuard } from './guards/github-auth.guard';
 import AuthUser from './interfaces/oauth-user.interface';
 import { ConfigService } from '@nestjs/config';
+import { EmailDto } from './dto/email.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 // TODO: Improve server responses (Error or success messages).
 @Controller({ path: 'auth', version: '1' })
@@ -113,6 +116,24 @@ export class AuthController {
   @Get('verify')
   async verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  async forgotPassword(@Body() emailDto: EmailDto) {
+    return this.authService.forgotPassword(emailDto);
+  }
+
+  @Public()
+  @Post('reset-password')
+  async resetPassword(
+    @Body() passwordDto: ResetPasswordDto,
+    @Query('token') token: string,
+  ) {
+    if (!token)
+      throw new BadRequestException('Reset password token is required');
+
+    return this.authService.resetPassword(passwordDto, token);
   }
 
   private async handleOAuthRedirect(

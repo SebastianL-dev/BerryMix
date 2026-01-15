@@ -8,6 +8,10 @@ import { EmailVerificationService } from './services/email-verification.service'
 import { RefreshTokenService } from './services/refresh-token.service';
 import { LogoutAllService } from './services/logout-all.service';
 import { OauthLoginService } from './services/oauth-login.service';
+import { EmailDto } from './dto/email.dto';
+import { ForgotPasswordService } from './services/forgot-password.service';
+import { ResetPasswordService } from './services/reset-password.service';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 // TODO: Add send other verification email function.
 // TODO: Create restore password function.
@@ -21,6 +25,8 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService,
     private logoutAllService: LogoutAllService,
     private oauthLoginService: OauthLoginService,
+    private forgotPasswordService: ForgotPasswordService,
+    private resetPasswordService: ResetPasswordService,
   ) {}
 
   async register(registerUserDto: RegisterUserDto) {
@@ -45,5 +51,13 @@ export class AuthService {
 
   async oauthLogin(oauthUser: OAuthUser) {
     return this.oauthLoginService.exec(oauthUser);
+  }
+
+  async forgotPassword(emailDto: EmailDto) {
+    return this.forgotPasswordService.exec(emailDto);
+  }
+
+  async resetPassword(passwordDto: ResetPasswordDto, resetToken: string) {
+    return this.resetPasswordService.exec(passwordDto, resetToken);
   }
 }
