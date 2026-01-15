@@ -19,13 +19,30 @@ export class EmailService {
   ) {
     const verificationLink = `${this.configService.get<string>('env.front.dev')}/verify-email?token=${verificationToken}`;
 
-    // TODO: Improve email message.
+    // TODO: Improve email verification message.
     return await this.resend.emails.send({
       from: 'BerryMix <berrymix@resend.dev>',
       to: [email],
       subject: `Hola ${name}`,
       html: `<strong>Si sirve</strong>
       <a href="${verificationLink}">Click para verificar</a>`,
+    });
+  }
+
+  async sendResetPasswordEmail(
+    email: string,
+    name: string,
+    resetPasswordToken: string,
+  ) {
+    const resetPasswordLink = `${this.configService.get<string>('env.front.dev')}/reset-password?token=${resetPasswordToken}`;
+
+    // TODO: Improve reset password message
+    return await this.resend.emails.send({
+      from: 'BerryMix <berrymix@resend.dev>',
+      to: [email],
+      subject: `Hola ${name}`,
+      html: `<strong>Si sirve</strong>
+      <a href="${resetPasswordLink}">Click para verificar</a>`,
     });
   }
 }
