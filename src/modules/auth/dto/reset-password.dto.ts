@@ -1,4 +1,10 @@
-import { IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class ResetPasswordDto {
   @IsNotEmpty()
@@ -9,4 +15,7 @@ export class ResetPasswordDto {
       'Password must include uppercase and lowercase letters, a number, and a special character',
   })
   password: string;
+
+  @IsString()
+  token: string;
 }

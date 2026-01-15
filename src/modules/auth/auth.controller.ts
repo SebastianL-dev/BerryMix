@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   Post,
-  Query,
   Req,
   Res,
   UseGuards,
@@ -21,6 +19,7 @@ import AuthUser from './interfaces/oauth-user.interface';
 import { ConfigService } from '@nestjs/config';
 import { EmailDto } from './dto/email.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { TokenDto } from './dto/token.dto';
 
 // TODO: Improve server responses (Error or success messages).
 @Controller({ path: 'auth', version: '1' })
@@ -114,8 +113,8 @@ export class AuthController {
 
   @Public()
   @Get('verify')
-  async verifyEmail(@Query('token') token: string) {
-    return this.authService.verifyEmail(token);
+  async verifyEmail(@Body() tokenDto: TokenDto) {
+    return this.authService.verifyEmail(tokenDto);
   }
 
   @Public()
@@ -126,14 +125,8 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
-  async resetPassword(
-    @Body() passwordDto: ResetPasswordDto,
-    @Query('token') token: string,
-  ) {
-    if (!token)
-      throw new BadRequestException('Reset password token is required');
-
-    return this.authService.resetPassword(passwordDto, token);
+  async resetPassword(@Body() passwordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(passwordDto);
   }
 
   private async handleOAuthRedirect(

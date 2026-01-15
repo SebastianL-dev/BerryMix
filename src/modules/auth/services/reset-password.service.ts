@@ -10,8 +10,8 @@ export class ResetPasswordService {
     private hashingService: HashingService,
   ) {}
 
-  async exec(passwordDto: ResetPasswordDto, resetToken: string) {
-    const hashedToken = this.hashingService.hashToken(resetToken);
+  async exec(passwordDto: ResetPasswordDto) {
+    const hashedToken = this.hashingService.hashToken(passwordDto.token);
 
     const storedToken = await this.prisma.passwordReset.findUnique({
       where: { token_hash: hashedToken },
@@ -38,6 +38,10 @@ export class ResetPasswordService {
       await tx.user.update({
         where: { id: storedToken.user_id },
         data: { password: hashedPassword },
+      });
+
+      await tx.refreshToken.deleteMany({
+        where: { user_id: storedToken.user_id },
       });
 
       await tx.passwordReset.delete({

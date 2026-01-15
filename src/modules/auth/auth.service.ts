@@ -12,6 +12,7 @@ import { EmailDto } from './dto/email.dto';
 import { ForgotPasswordService } from './services/forgot-password.service';
 import { ResetPasswordService } from './services/reset-password.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { TokenDto } from './dto/token.dto';
 
 // TODO: Add send other verification email function.
 // TODO: Create restore password function.
@@ -37,8 +38,8 @@ export class AuthService {
     return this.loginService.exec(loginUserDto);
   }
 
-  async verifyEmail(token: string) {
-    return this.emailVerificationService.exec(token);
+  async verifyEmail(tokenDto: TokenDto) {
+    return this.emailVerificationService.exec(tokenDto);
   }
 
   async refreshToken(refreshToken: string) {
@@ -57,7 +58,7 @@ export class AuthService {
     return this.forgotPasswordService.exec(emailDto);
   }
 
-  async resetPassword(passwordDto: ResetPasswordDto, resetToken: string) {
-    return this.resetPasswordService.exec(passwordDto, resetToken);
+  async resetPassword(passwordDto: ResetPasswordDto) {
+    return this.resetPasswordService.exec(passwordDto);
   }
 }

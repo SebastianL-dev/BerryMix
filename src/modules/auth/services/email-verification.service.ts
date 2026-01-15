@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { HashingService } from 'src/common/security';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TokenDto } from '../dto/token.dto';
 
 @Injectable()
 export class EmailVerificationService {
@@ -9,8 +10,8 @@ export class EmailVerificationService {
     private hashingService: HashingService,
   ) {}
 
-  async exec(token: string) {
-    const tokenHash = this.hashingService.hashToken(token);
+  async exec(tokenDto: TokenDto) {
+    const tokenHash = this.hashingService.hashToken(tokenDto.token);
 
     const verification = await this.prisma.emailVerification.findUnique({
       where: { token_hash: tokenHash },
