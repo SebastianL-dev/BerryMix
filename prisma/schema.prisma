@@ -23,6 +23,7 @@ model User {
   auth_providers AuthProvider[]
   refresh_tokens RefreshToken[]
   email_verifications EmailVerification[]
+  password_reset PasswordReset[]
   
   @@index([id, email])
   @@map("users")
@@ -67,4 +68,16 @@ model EmailVerification {
 
   @@index([user_id, token_hash])
   @@map("email_verifications")
+}
+
+model PasswordReset{
+  id String @id @default(uuid()) @db.Uuid
+  user_id String @db.Uuid
+  token_hash String @unique
+  expires_at DateTime @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, token_hash])
+  @@map("password_reset")
 }
