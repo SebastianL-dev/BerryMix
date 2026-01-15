@@ -6,7 +6,6 @@ import {
   Query,
   Req,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -20,7 +19,6 @@ import { GitHubAuthGuard } from './guards/github-auth.guard';
 import AuthUser from './interfaces/oauth-user.interface';
 import { ConfigService } from '@nestjs/config';
 
-// FIXME: Simplify code.
 // TODO: Improve server responses (Error or success messages).
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
@@ -31,21 +29,13 @@ export class AuthController {
     private cookieService: CookieService,
     private readonly configService: ConfigService,
   ) {
-    this.frontUrl =
-      this.configService.get<string>('env.node') === 'development'
-        ? this.configService.get<string>('env.front.dev')!
-        : this.configService.get<string>('env.front.prod')!;
+    this.frontUrl = this.getFrontendUrl();
   }
 
   @Public()
   @Post('register')
-  async register(
-    @Body() registerUserDto: RegisterUserDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    await this.authService.register(registerUserDto);
-
-    return response.redirect(`${this.frontUrl}/verification`);
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    return this.authService.register(registerUserDto);
   }
 
   @Public()
@@ -57,19 +47,7 @@ export class AuthController {
     const { user, accessToken, refreshToken } =
       await this.authService.login(loginUserDto);
 
-    this.cookieService.set(
-      response,
-      'berrymix_acc_token',
-      accessToken,
-      1000 * 60 * 30,
-    );
-    this.cookieService.set(
-      response,
-      'berrymix_ref_token',
-      refreshToken,
-      1000 * 60 * 60 * 24 * 7,
-      '/auth/refresh',
-    );
+    this.cookieService.setAuthTokens(response, accessToken, refreshToken);
 
     return user;
   }
@@ -79,14 +57,8 @@ export class AuthController {
     @Req() request: { user: { user_id: string } },
     @Res({ passthrough: true }) response: Response,
   ) {
-    const userId = request.user.user_id;
-
-    if (userId) {
-      await this.authService.logoutAll(userId);
-    }
-
-    this.cookieService.clear(response, 'berrymix_acc_token');
-    this.cookieService.clear(response, 'berrymix_ref_token', '/auth/refresh');
+    await this.authService.logoutAll(request.user.user_id);
+    this.cookieService.clearAuthTokens(response);
 
     return { message: 'Logged out succesfully' };
   }
@@ -97,28 +69,12 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = request.cookies?.berrymix_ref_token as
-      | string
-      | undefined;
-
-    if (!refreshToken) throw new UnauthorizedException('Invalid credentials');
+    const refreshToken = this.cookieService.getRefreshToken(request);
 
     const { newAccessToken, newRefreshToken } =
       await this.authService.refreshToken(refreshToken);
 
-    this.cookieService.set(
-      response,
-      'berrymix_acc_token',
-      newAccessToken,
-      1000 * 60 * 30,
-    );
-    this.cookieService.set(
-      response,
-      'berrymix_ref_token',
-      newRefreshToken,
-      1000 * 60 * 60 * 24 * 7,
-      '/auth/refresh',
-    );
+    this.cookieService.setAuthTokens(response, newAccessToken, newRefreshToken);
 
     return { message: 'Token refreshed successfully' };
   }
@@ -135,25 +91,7 @@ export class AuthController {
     @Req() request: Request & { user: AuthUser },
     @Res() response: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.oauthLogin(
-      request.user,
-    );
-
-    this.cookieService.set(
-      response,
-      'berrymix_acc_token',
-      accessToken,
-      1000 * 60 * 30,
-    );
-    this.cookieService.set(
-      response,
-      'berrymix_ref_token',
-      refreshToken,
-      1000 * 60 * 60 * 24 * 7,
-      '/auth/refresh',
-    );
-
-    return response.redirect(`${this.frontUrl}/profile`);
+    return this.handleOAuthRedirect(request, response);
   }
 
   @Public()
@@ -168,30 +106,34 @@ export class AuthController {
     @Req() request: Request & { user: AuthUser },
     @Res() response: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.oauthLogin(
-      request.user,
-    );
-
-    this.cookieService.set(
-      response,
-      'berrymix_acc_token',
-      accessToken,
-      1000 * 60 * 30,
-    );
-    this.cookieService.set(
-      response,
-      'berrymix_ref_token',
-      refreshToken,
-      1000 * 60 * 60 * 24 * 7,
-      '/auth/refresh',
-    );
-
-    return response.redirect(`${this.frontUrl}/profile`);
+    return this.handleOAuthRedirect(request, response);
   }
 
   @Public()
   @Get('verify')
   async verifyEmail(@Query('token') token: string) {
-    return await this.authService.verifyEmail(token);
+    return this.authService.verifyEmail(token);
+  }
+
+  private async handleOAuthRedirect(
+    request: Request & { user: AuthUser },
+    response: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.oauthLogin(
+      request.user,
+    );
+
+    this.cookieService.setAuthTokens(response, accessToken, refreshToken);
+
+    return response.redirect(`${this.frontUrl}/profile`);
+  }
+
+  private getFrontendUrl() {
+    const isDevelopment =
+      this.configService.get<string>('env.node') === 'development';
+
+    return isDevelopment
+      ? this.configService.get<string>('env.front.dev')!
+      : this.configService.get<string>('env.front.prod')!;
   }
 }
